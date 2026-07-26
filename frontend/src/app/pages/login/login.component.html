@@ -1,33 +1,51 @@
 <div class="auth-page">
-  <mat-card class="auth-card">
-    <h1>Connexion</h1>
-    <p class="subtitle">AI Resume Optimizer</p>
+  <app-auth-background-component />
 
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
-        <input matInput type="email" formControlName="email" />
-      </mat-form-field>
+  <div class="auth-card-wrapper">
+    <mat-card
+      class="auth-card"
+      (mousemove)="onCardMouseMove($event)"
+      (mouseleave)="onCardMouseLeave()"
+      [style.transform]="cardTransform()"
+    >
+      <div class="card-glow" [style.background]="glowBackground()"></div>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Mot de passe</mat-label>
-        <input matInput type="password" formControlName="password" />
-      </mat-form-field>
+      <div class="card-content">
+        <span class="eyebrow">AI Resume Optimizer</span>
+        <h1>Connexion</h1>
+        <p class="subtitle">Analysez et optimisez votre CV avec l'IA</p>
 
-      @if (error) {
-        <p class="error">{{ error }}</p>
-      }
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+          </mat-form-field>
 
-      <button mat-flat-button color="primary" class="full-width" [disabled]="loading || form.invalid">
-        {{ loading ? 'Connexion...' : 'Se connecter' }}
-      </button>
-    </form>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mot de passe</mat-label>
+            <input matInput type="password" formControlName="password" />
+          </mat-form-field>
 
-    <p class="footer-link">
-      Pas de compte ?
-      <a routerLink="/register">Créer un compte</a>
-      ·
-      <a routerLink="/analyze">Analyser sans compte</a>
-    </p>
-  </mat-card>
+          @if (error) {
+            <p class="error">{{ error }}</p>
+          }
+
+          <button
+            mat-flat-button
+            class="cta-button full-width"
+            [disabled]="loading || form.invalid"
+          >
+            {{ loading ? 'Connexion...' : 'Se connecter' }}
+          </button>
+        </form>
+
+        <p class="footer-link">
+          Pas de compte ?
+          <a routerLink="/register">Créer un compte</a>
+          ·
+          <a routerLink="/analyze">Analyser sans compte</a>
+        </p>
+      </div>
+    </mat-card>
+  </div>
 </div>

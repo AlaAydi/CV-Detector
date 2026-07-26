@@ -1,14 +1,103 @@
+:host {
+  --auth-accent: #7c6ff0;
+  --auth-accent-warm: #f2b84b;
+  --auth-bg-deep: #0a0e27;
+  --auth-text: #e8e9f3;
+  --auth-text-muted: #9599b8;
+}
+
 .auth-page {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 24px;
+  overflow: hidden;
+  background: var(--auth-bg-deep);
+}
+
+.auth-card-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  perspective: 1000px;
+  animation: cardEnter 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .auth-card {
+  position: relative;
   width: 100%;
-  max-width: 420px;
-  padding: 32px;
+  padding: 40px 32px;
+  border-radius: 20px;
+  background: rgba(17, 18, 42, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 80px rgba(5, 6, 20, 0.55);
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      var(--auth-accent) 70deg,
+      var(--auth-accent-warm) 140deg,
+      transparent 220deg,
+      transparent 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: scanRotate 5s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+.card-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: background 0.2s ease;
+  z-index: 0;
+}
+
+.card-content {
+  position: relative;
+  z-index: 1;
+  transform: translateZ(30px);
+}
+
+.eyebrow {
+  display: inline-block;
+  font: 600 11px/1 'Inter', sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--auth-accent-warm);
+  margin-bottom: 12px;
+}
+
+h1 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--auth-text);
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-family: 'Inter', sans-serif;
+  color: var(--auth-text-muted);
+  margin-bottom: 28px;
+  font-size: 14px;
 }
 
 .full-width {
@@ -16,17 +105,89 @@
   margin-bottom: 12px;
 }
 
-.subtitle {
-  color: #64748b;
-  margin-bottom: 24px;
-}
-
 .error {
-  color: #dc2626;
+  color: #fca5a5;
+  font-size: 13px;
   margin-bottom: 12px;
 }
 
 .footer-link {
-  margin-top: 20px;
+  margin-top: 24px;
   text-align: center;
+  font-size: 13px;
+  color: var(--auth-text-muted);
+
+  a {
+    color: var(--auth-accent);
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.cta-button {
+  height: 48px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(124, 111, 240, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(124, 111, 240, 0.45);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+  }
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes scanRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-card-wrapper {
+    animation: none;
+  }
+  .auth-card::before {
+    animation: none;
+  }
+}
+
+:host ::ng-deep {
+  .mat-mdc-form-field {
+    --mdc-outlined-text-field-label-text-color: var(--auth-text-muted);
+    --mdc-outlined-text-field-outline-color: rgba(255, 255, 255, 0.18);
+    --mdc-outlined-text-field-hover-outline-color: rgba(255, 255, 255, 0.32);
+    --mdc-outlined-text-field-focus-outline-color: var(--auth-accent);
+    --mdc-outlined-text-field-input-text-color: var(--auth-text);
+    --mdc-outlined-text-field-focus-label-text-color: var(--auth-accent);
+    --mat-form-field-hint-text-color: var(--auth-text-muted);
+  }
+
+  .mdc-text-field--outlined .mdc-floating-label {
+    color: var(--auth-text-muted);
+  }
+
+  .mat-mdc-button.cta-button {
+    background: linear-gradient(135deg, var(--auth-accent), #5b4fd1);
+  }
 }

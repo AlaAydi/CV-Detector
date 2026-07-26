@@ -1,0 +1,120 @@
+.auth-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  perspective: 1200px;
+  background: linear-gradient(135deg, #0a0e27 0%, #151233 45%, #1e1b4b 100%);
+}
+
+.mesh {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 20% 25%, rgba(124, 111, 240, 0.35), transparent 40%),
+    radial-gradient(circle at 80% 20%, rgba(242, 184, 75, 0.18), transparent 35%),
+    radial-gradient(circle at 50% 85%, rgba(94, 234, 212, 0.15), transparent 40%);
+  animation: meshShift 16s ease-in-out infinite alternate;
+  filter: blur(10px);
+}
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: gridDrift 24s linear infinite;
+  mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%);
+}
+
+.shard {
+  position: absolute;
+  width: 96px;
+  height: 128px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  transform-style: preserve-3d;
+  background:
+    linear-gradient(160deg, rgba(124, 111, 240, 0.18), rgba(242, 184, 75, 0.08)) padding-box,
+    repeating-linear-gradient(to bottom, transparent 0 20px, rgba(255, 255, 255, 0.1) 20px 23px) content-box;
+  padding: 24px 16px;
+  backdrop-filter: blur(3px);
+}
+
+.shard-1 {
+  top: 12%;
+  left: 10%;
+  transform: rotate3d(1, 1, 0, 25deg);
+  animation: float1 15s ease-in-out infinite;
+}
+
+.shard-2 {
+  top: 65%;
+  left: 15%;
+  transform: rotate3d(-1, 1, 0, -20deg);
+  animation: float2 19s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+.shard-3 {
+  top: 18%;
+  right: 12%;
+  transform: rotate3d(1, -1, 0, -22deg);
+  animation: float3 17s ease-in-out infinite;
+}
+
+.shard-4 {
+  top: 68%;
+  right: 8%;
+  transform: rotate3d(1, 1, 0, 18deg);
+  animation: float4 21s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+@keyframes meshShift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(3%, -3%, 0) scale(1.08); }
+}
+
+@keyframes gridDrift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 48px 48px, 48px 48px; }
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate3d(1, 1, 0, 25deg); }
+  50% { transform: translate3d(14px, -22px, 30px) rotate3d(1, 1, 0, 35deg); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate3d(-1, 1, 0, -20deg); }
+  50% { transform: translate3d(-16px, 18px, 20px) rotate3d(-1, 1, 0, -30deg); }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate3d(1, -1, 0, -22deg); }
+  50% { transform: translate3d(-12px, -16px, 24px) rotate3d(1, -1, 0, -12deg); }
+}
+
+@keyframes float4 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate3d(1, 1, 0, 18deg); }
+  50% { transform: translate3d(10px, 20px, 16px) rotate3d(1, 1, 0, 28deg); }
+}
+
+@media (max-width: 640px) {
+  .shard {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh,
+  .grid-overlay,
+  .shard {
+    animation: none;
+  }
+}
