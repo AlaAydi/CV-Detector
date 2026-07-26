@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 
-from app.services.nlp_service import detect_skills
+from app.services.nlp_service import detect_education_terms, detect_languages, detect_skills
 
 
 SECTION_HEADERS = {
@@ -10,6 +10,23 @@ SECTION_HEADERS = {
     "experience": ["experience", "expérience", "work experience", "employment", "professional experience"],
     "education": ["education", "formation", "studies", "diplômes", "diplomes"],
     "projects": ["projects", "projets", "portfolio"],
+    "languages": ["languages", "langues", "language"],
+}
+
+# Which detector extracts "keywords" for each section, and how additions are
+# inserted once a keyword is confirmed to be already true (present elsewhere
+# in the CV) and required by the job, but missing from that section.
+#   - "list": list/enumeration-style sections (skills, languages, education) ->
+#     the missing item is inserted as its own line/entry.
+#   - "append_line": narrative/bullet sections (experience, projects) -> the
+#     missing keyword is appended to the end of the last existing bullet,
+#     i.e. a real rewrite of that line, instead of inventing a new bullet.
+SECTION_KEYWORD_CONFIG: dict[str, tuple] = {
+    "skills": (detect_skills, "list"),
+    "languages": (detect_languages, "list"),
+    "education": (detect_education_terms, "list"),
+    "experience": (detect_skills, "append_line"),
+    "projects": (detect_skills, "append_line"),
 }
 
 
@@ -59,35 +76,41 @@ def parse_sections_ordered(text: str) -> list[ResumeSection]:
     return sections
 
 
+def _ordered_keywords(resume_text: str, job_text: str, detector) -> list[str]:
+    resume_keywords = detector(resume_text)
+    job_keywords = detector(job_text)
+    prioritized = [keyword for keyword in job_keywords if keyword in resume_keywords]
+    remaining = [keyword for keyword in resume_keywords if keyword not in prioritized]
+    return prioritized + remaining
+
+
 def get_ordered_skills(resume_text: str, job_text: str) -> list[str]:
-    resume_skills = detect_skills(resume_text)
-    job_skills = detect_skills(job_text)
-    prioritized_skills = [skill for skill in job_skills if skill in resume_skills]
-    remaining_skills = [skill for skill in resume_skills if skill not in prioritized_skills]
-    return prioritized_skills + remaining_skills
+    return _ordered_keywords(resume_text, job_text, detect_skills)
 
 
-def _skills_in_section_lines(lines: list[str]) -> set[str]:
+def _keywords_in_section_lines(lines: list[str], detector) -> set[str]:
     if not lines:
         return set()
     section_text = " ".join(lines)
-    return set(detect_skills(section_text))
+    return set(detector(section_text))
 
 
-def _promoted_skills(resume_text: str, job_text: str, skills_lines: list[str]) -> set[str]:
-    """Skills present elsewhere in the CV and required by the job, but absent from the skills section."""
-    section_skills = _skills_in_section_lines(skills_lines)
-    resume_skills = set(detect_skills(resume_text))
-    job_skills = set(detect_skills(job_text))
-    return {skill for skill in resume_skills & job_skills if skill not in section_skills}
+def _promoted_keywords(resume_text: str, job_text: str, section_lines: list[str], detector) -> set[str]:
+    """Keywords already true (present elsewhere in the CV) and required by the job,
+    but absent from this specific section. Never introduces anything that isn't
+    already demonstrably in the CV, so no information is invented."""
+    section_keywords = _keywords_in_section_lines(section_lines, detector)
+    resume_keywords = set(detector(resume_text))
+    job_keywords = set(detector(job_text))
+    return {keyword for keyword in resume_keywords & job_keywords if keyword not in section_keywords}
 
 
-def _line_skill_priority(line: str, ordered_skills: list[str]) -> int:
+def _line_keyword_priority(line: str, ordered_keywords: list[str]) -> int:
     line_lower = line.lower()
-    for index, skill in enumerate(ordered_skills):
-        if skill in line_lower:
+    for index, keyword in enumerate(ordered_keywords):
+        if keyword in line_lower:
             return index
-    return len(ordered_skills) + 1
+    return len(ordered_keywords) + 1
 
 
 def _token_display_name(skill: str, resume_text: str) -> str:
@@ -99,14 +122,14 @@ def _token_display_name(skill: str, resume_text: str) -> str:
     return skill
 
 
-def _reorder_inline_skills(line: str, ordered_skills: list[str], promoted: set[str], resume_text: str) -> str:
+def _reorder_inline_keywords(line: str, ordered_keywords: list[str], promoted: set[str], resume_text: str) -> str:
     separator = ", " if "," in line else "; "
     parts = [part.strip() for part in re.split(r"[,;]", line) if part.strip()]
 
     existing_lower = {part.lower() for part in parts}
-    for skill in ordered_skills:
-        if skill in promoted:
-            display = _token_display_name(skill, resume_text)
+    for keyword in ordered_keywords:
+        if keyword in promoted:
+            display = _token_display_name(keyword, resume_text)
             if display.lower() not in existing_lower:
                 parts.insert(0, display)
                 existing_lower.add(display.lower())
@@ -114,48 +137,83 @@ def _reorder_inline_skills(line: str, ordered_skills: list[str], promoted: set[s
     if len(parts) <= 1:
         return parts[0] if parts else line
 
-    sorted_parts = sorted(parts, key=lambda part: _line_skill_priority(part, ordered_skills))
+    sorted_parts = sorted(parts, key=lambda part: _line_keyword_priority(part, ordered_keywords))
     return separator.join(sorted_parts)
 
 
-def _optimize_skills_lines(
+def _optimize_list_lines(
     lines: list[str],
-    ordered_skills: list[str],
+    ordered_keywords: list[str],
     promoted: set[str],
     resume_text: str,
 ) -> list[str]:
+    """Reorder/insert for enumeration-style sections (skills, languages, education)."""
     if not lines:
         if promoted:
-            display = [_token_display_name(skill, resume_text) for skill in ordered_skills if skill in promoted]
+            display = [_token_display_name(keyword, resume_text) for keyword in ordered_keywords if keyword in promoted]
             return [", ".join(display)] if display else lines
         return lines
 
     if len(lines) == 1 and ("," in lines[0] or ";" in lines[0]):
-        return [_reorder_inline_skills(lines[0], ordered_skills, promoted, resume_text)]
+        return [_reorder_inline_keywords(lines[0], ordered_keywords, promoted, resume_text)]
 
-    result = sorted(lines, key=lambda line: _line_skill_priority(line, ordered_skills))
+    result = sorted(lines, key=lambda line: _line_keyword_priority(line, ordered_keywords))
     existing_lower = {line.lower() for line in result}
-    for skill in ordered_skills:
-        if skill not in promoted:
+    for keyword in ordered_keywords:
+        if keyword not in promoted:
             continue
-        display = _token_display_name(skill, resume_text)
+        display = _token_display_name(keyword, resume_text)
         if display.lower() not in existing_lower:
             result.insert(0, display)
             existing_lower.add(display.lower())
     return result
 
 
+def _extend_last_line_with_missing(
+    lines: list[str],
+    ordered_keywords: list[str],
+    promoted: set[str],
+    resume_text: str,
+) -> list[str]:
+    """Rewrite the last bullet of a narrative section (experience, projects) to
+    fold in already-true keywords it doesn't mention yet, instead of inventing
+    a disconnected new bullet."""
+    if not lines or not promoted:
+        return lines
+
+    display = [_token_display_name(keyword, resume_text) for keyword in ordered_keywords if keyword in promoted]
+    if not display:
+        return lines
+
+    result = lines[:]
+    last = result[-1].rstrip()
+    if last and last[-1] not in ".!?":
+        connector = ", " if ("," in last or ":" in last) else " – "
+    else:
+        connector = " – "
+        last = last.rstrip(".!? ")
+    result[-1] = f"{last}{connector}{', '.join(display)}"
+    return result
+
+
 def optimize_sections(resume_text: str, job_text: str) -> list[ResumeSection]:
     sections = parse_sections_ordered(resume_text)
-    ordered_skills = get_ordered_skills(resume_text, job_text)
 
     optimized: list[ResumeSection] = []
     for section in sections:
-        if section.key == "skills" and section.lines:
-            promoted = _promoted_skills(resume_text, job_text, section.lines)
-            new_lines = _optimize_skills_lines(section.lines, ordered_skills, promoted, resume_text)
+        config = SECTION_KEYWORD_CONFIG.get(section.key)
+        if config and section.lines:
+            detector, strategy = config
+            ordered_keywords = _ordered_keywords(resume_text, job_text, detector)
+            promoted = _promoted_keywords(resume_text, job_text, section.lines, detector)
+
+            if strategy == "append_line":
+                new_lines = _extend_last_line_with_missing(section.lines, ordered_keywords, promoted, resume_text)
+            else:
+                new_lines = _optimize_list_lines(section.lines, ordered_keywords, promoted, resume_text)
+
             highlight = frozenset(
-                _token_display_name(skill, resume_text).lower() for skill in promoted
+                _token_display_name(keyword, resume_text).lower() for keyword in promoted
             )
             optimized.append(
                 ResumeSection(section.key, section.title, new_lines, highlight),
@@ -177,7 +235,7 @@ def sections_to_text(sections: list[ResumeSection]) -> str:
             if section.title:
                 block.append(section.title)
             for line in section.lines:
-                if section.highlight_tokens and section.key == "skills":
+                if section.highlight_tokens:
                     block.append(_format_line_with_highlights(line, section.highlight_tokens))
                 else:
                     block.append(line)
@@ -209,7 +267,4 @@ def optimize_resume(resume_text: str, job_text: str) -> str:
 
 
 def sections_have_changes(sections: list[ResumeSection]) -> bool:
-    return any(
-        section.key == "skills" and (section.lines or section.highlight_tokens)
-        for section in sections
-    )
+    return any(section.highlight_tokens for section in sections)

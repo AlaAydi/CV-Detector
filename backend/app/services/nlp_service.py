@@ -20,6 +20,21 @@ EDUCATION_PATTERNS = [
     r"\b(?:certification|certified|certificate|dipl[oô]me)\b",
 ]
 
+# Fixed vocabulary (no external file needed) so spoken languages can be
+# matched the same way as technical skills: canonical -> known aliases.
+LANGUAGE_SYNONYMS: dict[str, list[str]] = {
+    "français": ["français", "francais", "french"],
+    "anglais": ["anglais", "english"],
+    "espagnol": ["espagnol", "spanish", "español"],
+    "allemand": ["allemand", "german", "deutsch"],
+    "italien": ["italien", "italian", "italiano"],
+    "arabe": ["arabe", "arabic"],
+    "chinois": ["chinois", "chinese", "mandarin"],
+    "portugais": ["portugais", "portuguese"],
+    "russe": ["russe", "russian"],
+    "néerlandais": ["néerlandais", "neerlandais", "dutch"],
+}
+
 
 @lru_cache
 def load_synonyms() -> dict[str, list[str]]:
@@ -59,6 +74,33 @@ def detect_skills(text: str) -> list[str]:
         if re.search(pattern, text_lower):
             found.add(canonical)
 
+    return sorted(found)
+
+
+def detect_languages(text: str) -> list[str]:
+    text_lower = text.lower()
+    found: set[str] = set()
+    for canonical, aliases in LANGUAGE_SYNONYMS.items():
+        for alias in aliases:
+            if re.search(r"\b" + re.escape(alias) + r"\b", text_lower):
+                found.add(canonical)
+                break
+    return sorted(found)
+
+
+def detect_education_terms(text: str) -> list[str]:
+    """Extract education/degree/certification terms literally present in the text.
+
+    Unlike detect_skills (fixed canonical vocabulary), education wording varies too
+    much to normalize safely, so we return the matched substrings themselves.
+    """
+    text_lower = text.lower()
+    found: set[str] = set()
+    for pattern in EDUCATION_PATTERNS:
+        for match in re.finditer(pattern, text_lower):
+            term = re.sub(r"\s+", " ", match.group(0)).strip()
+            if term:
+                found.add(term)
     return sorted(found)
 
 
