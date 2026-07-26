@@ -64,10 +64,11 @@
 }
 
 .hero-content {
+  position: relative;
+  z-index: 2;
   flex: 1 1 420px;
   max-width: 560px;
 }
-
 .eyebrow {
   display: inline-block;
   font: 600 11px/1 'Inter', sans-serif;
@@ -123,6 +124,7 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.15s ease-out;
+  z-index: 2;
 }
 
 .hero-card {
