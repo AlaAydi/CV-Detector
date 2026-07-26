@@ -13,15 +13,16 @@
 
 .app-header {
   padding: 16px 24px;
-  background: transparent;
-  border-bottom: 1px solid transparent;
-  transition: background 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease;
+  // Always tinted, not fully transparent — stays legible over any page background
+  background: rgba(10, 14, 39, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.25s ease, border-color 0.25s ease;
 
   &.scrolled {
-    background: rgba(10, 14, 39, 0.72);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: rgba(10, 14, 39, 0.82);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -33,6 +34,7 @@
   gap: 24px;
 }
 
+// Logo
 .logo {
   display: flex;
   align-items: center;
@@ -70,6 +72,7 @@
   color: transparent;
 }
 
+// Nav links
 .nav-links {
   display: flex;
   align-items: center;
