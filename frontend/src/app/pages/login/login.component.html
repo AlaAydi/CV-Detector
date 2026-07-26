@@ -1,0 +1,33 @@
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <h1>Connexion</h1>
+    <p class="subtitle">AI Resume Optimizer</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mot de passe</mat-label>
+        <input matInput type="password" formControlName="password" />
+      </mat-form-field>
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
+
+      <button mat-flat-button color="primary" class="full-width" [disabled]="loading || form.invalid">
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+
+    <p class="footer-link">
+      Pas de compte ?
+      <a routerLink="/register">Créer un compte</a>
+      ·
+      <a routerLink="/analyze">Analyser sans compte</a>
+    </p>
+  </mat-card>
+</div>

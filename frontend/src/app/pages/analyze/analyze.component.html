@@ -1,0 +1,115 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Analyser mon CV</h1>
+      <p>Importez votre CV, collez la description du poste, obtenez un score ATS et un CV optimisé.</p>
+    </div>
+  </header>
+
+  @if (loading) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  @if (error) {
+    <mat-card class="error-card">{{ error }}</mat-card>
+  }
+
+  @if (step === 'upload') {
+    <mat-card class="section-card">
+      <h2>1. Importer le CV</h2>
+      <p>Formats acceptés : PDF, DOCX (max 5 Mo)</p>
+      <input type="file" accept=".pdf,.docx" (change)="onFileSelected($event)" />
+      @if (selectedFile) {
+        <p class="file-name">Fichier : {{ selectedFile.name }}</p>
+      }
+      <button mat-flat-button color="primary" (click)="uploadCv()" [disabled]="!selectedFile || loading">
+        Importer le CV
+      </button>
+    </mat-card>
+  }
+
+  @if (step === 'analyze' && resume) {
+    <mat-card class="section-card">
+      <h2>2. Description du poste</h2>
+      <p class="preview-label">CV importé : {{ resume.filename }}</p>
+      <form [formGroup]="form" (ngSubmit)="runAnalysis()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Coller la description du poste</mat-label>
+          <textarea matInput rows="12" formControlName="jobDescription"></textarea>
+        </mat-form-field>
+        <div class="actions">
+          <button mat-stroked-button type="button" (click)="reset()">Recommencer</button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading">
+            Lancer l'analyse
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  }
+
+  @if (step === 'result' && result) {
+    <div class="results-grid">
+      <mat-card class="score-card" [class]="scoreColor(result.score)">
+        <h2>Score ATS</h2>
+        <div class="score-value">{{ result.score }}%</div>
+        <p>Compatibilité : {{ result.compatibility_level }}</p>
+      </mat-card>
+
+      <mat-card class="section-card">
+        <h3>Détail du score</h3>
+        <ul class="score-breakdown">
+          <li>Compétences : {{ result.score_skills }}%</li>
+          <li>Mots-clés : {{ result.score_keywords }}%</li>
+          <li>Expérience : {{ result.score_experience }}%</li>
+          <li>Formation : {{ result.score_education }}%</li>
+        </ul>
+      </mat-card>
+
+      <mat-card class="section-card">
+        <h3>Compétences détectées</h3>
+        <div class="chips">
+          @for (skill of result.matched_skills; track skill) {
+            <mat-chip>{{ skill }}</mat-chip>
+          }
+        </div>
+      </mat-card>
+
+      <mat-card class="section-card">
+        <h3>Compétences manquantes</h3>
+        <div class="chips missing">
+          @for (skill of result.missing_skills; track skill) {
+            <mat-chip>{{ skill }}</mat-chip>
+          }
+        </div>
+      </mat-card>
+
+      <mat-card class="section-card full-width">
+        <h3>Recommandations</h3>
+        <ul>
+          @for (rec of result.recommendations; track rec) {
+            <li>{{ rec }}</li>
+          }
+        </ul>
+      </mat-card>
+
+      <mat-card class="section-card full-width comparison">
+        <h3>Comparaison CV</h3>
+        <div class="comparison-grid">
+          <div>
+            <h4>Ancien CV</h4>
+            <pre>{{ result.resume_text }}</pre>
+          </div>
+          <div>
+            <h4>CV optimisé</h4>
+            <pre>{{ result.optimized_text }}</pre>
+          </div>
+        </div>
+        <div class="actions">
+          <button mat-stroked-button (click)="download('pdf')">Télécharger PDF</button>
+          <button mat-stroked-button (click)="download('docx')">Télécharger DOCX</button>
+          <button mat-flat-button color="primary" (click)="reset()">Nouvelle analyse</button>
+        </div>
+      </mat-card>
+    </div>
+  }
+</div>

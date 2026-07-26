@@ -1,0 +1,20 @@
+<mat-toolbar color="primary" class="toolbar">
+  <a routerLink="/" class="brand">AI Resume Optimizer</a>
+
+  <span class="spacer"></span>
+
+  <a mat-button routerLink="/analyze" routerLinkActive="active">Analyser</a>
+
+  @if (auth.isLoggedIn()) {
+    <a mat-button routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <a mat-button routerLink="/history" routerLinkActive="active">Historique</a>
+    <button mat-button (click)="logout()">Déconnexion</button>
+  } @else {
+    <a mat-button routerLink="/login" routerLinkActive="active">Connexion</a>
+    <a mat-button routerLink="/register" routerLinkActive="active">Inscription</a>
+  }
+</mat-toolbar>
+
+<main>
+  <router-outlet></router-outlet>
+</main>

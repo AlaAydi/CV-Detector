@@ -1,0 +1,38 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Dashboard</h1>
+    <a mat-flat-button color="primary" routerLink="/analyze">Nouvelle analyse</a>
+  </header>
+
+  @if (stats) {
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <h3>Analyses totales</h3>
+        <p class="stat-value">{{ stats.total_analyses }}</p>
+      </mat-card>
+      <mat-card class="stat-card">
+        <h3>Score moyen</h3>
+        <p class="stat-value">{{ stats.average_score }}%</p>
+      </mat-card>
+    </div>
+
+    <mat-card class="section-card">
+      <h2>Dernières analyses</h2>
+      @if (stats.last_analyses.length === 0) {
+        <p>Aucune analyse pour le moment.</p>
+      } @else {
+        <div class="history-list">
+          @for (item of stats.last_analyses; track item.id) {
+            <div class="history-item">
+              <div>
+                <strong>Score : {{ item.score }}%</strong>
+                <span>{{ item.compatibility_level }}</span>
+              </div>
+              <a mat-button [routerLink]="['/history', item.id]">Voir</a>
+            </div>
+          }
+        </div>
+      }
+    </mat-card>
+  }
+</div>

@@ -1,0 +1,36 @@
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <h1>Inscription</h1>
+    <p class="subtitle">Créez votre compte pour sauvegarder vos analyses</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="nom" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mot de passe</mat-label>
+        <input matInput type="password" formControlName="password" />
+      </mat-form-field>
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
+
+      <button mat-flat-button color="primary" class="full-width" [disabled]="loading || form.invalid">
+        {{ loading ? 'Création...' : 'Créer mon compte' }}
+      </button>
+    </form>
+
+    <p class="footer-link">
+      Déjà inscrit ?
+      <a routerLink="/login">Se connecter</a>
+    </p>
+  </mat-card>
+</div>

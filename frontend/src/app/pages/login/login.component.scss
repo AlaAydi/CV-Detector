@@ -1,0 +1,32 @@
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.error {
+  color: #dc2626;
+  margin-bottom: 12px;
+}
+
+.footer-link {
+  margin-top: 20px;
+  text-align: center;
+}

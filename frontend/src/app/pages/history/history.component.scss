@@ -1,0 +1,22 @@
+@import '../dashboard/dashboard.component.scss';
+
+pre {
+  white-space: pre-wrap;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
