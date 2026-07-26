@@ -21,7 +21,6 @@ export class HeaderComponent {
   menuOpen = signal(false);
 
   links: NavLink[] = [
-    { label: 'Analyser', path: '/analyze' },
     { label: 'Tarifs', path: '/pricing' },
     { label: 'FAQ', path: '/faq' },
   ];

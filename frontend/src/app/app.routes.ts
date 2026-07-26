@@ -2,7 +2,11 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  // La landing devient la page racine ; "analyze" garde sa propre URL directe.
+  {
+    path: '',
+    loadComponent: () => import('./shared/landingpage/landingpage.component').then((m) => m.LandingpageComponent),
+  },
   {
     path: 'login',
     data: { hideHeader: true },
@@ -33,5 +37,5 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/history/history.component').then((m) => m.HistoryComponent),
   },
-  { path: '**', redirectTo: 'analyze' },
+  { path: '**', redirectTo: '' },
 ];
