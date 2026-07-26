@@ -1,38 +1,66 @@
 <div class="page">
   <header class="page-header">
     <h1>{{ detail ? 'Détail analyse' : 'Historique' }}</h1>
-    <a mat-button routerLink="/dashboard">Retour dashboard</a>
+    <a mat-flat-button color="primary" routerLink="/dashboard">Retour dashboard</a>
   </header>
 
   @if (detail) {
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <h3>Score de compatibilité</h3>
+        <p class="stat-value">{{ detail.score }}%</p>
+      </mat-card>
+      <mat-card class="stat-card">
+        <h3>Niveau</h3>
+        <span class="badge" [ngClass]="compatibilityClass(detail.compatibility_level)">
+          {{ detail.compatibility_level }}
+        </span>
+      </mat-card>
+    </div>
+
+    @if (detail.matched_skills && detail.matched_skills.length > 0) {
+      <mat-card class="section-card">
+        <h2>Compétences détectées</h2>
+        <div class="chips">
+          @for (skill of detail.matched_skills; track skill) {
+            <mat-chip>{{ skill }}</mat-chip>
+          }
+        </div>
+      </mat-card>
+    }
+
     <mat-card class="section-card">
-      <h2>Score : {{ detail.score }}%</h2>
-      <p>Compatibilité : {{ detail.compatibility_level }}</p>
-      <div class="chips">
-        @for (skill of detail.matched_skills; track skill) {
-          <mat-chip>{{ skill }}</mat-chip>
+      <h2>CV optimisé</h2>
+      <div class="optimized-text">
+        @for (paragraph of optimizedParagraphs; track $index) {
+          <p>{{ paragraph }}</p>
         }
       </div>
-      <pre>{{ detail.optimized_text }}</pre>
       <div class="actions">
-        <button mat-stroked-button (click)="download('pdf')">PDF</button>
-        <button mat-stroked-button (click)="download('docx')">DOCX</button>
+        <button mat-stroked-button (click)="download('pdf')">
+          <span>Télécharger PDF</span>
+        </button>
+        <button mat-stroked-button (click)="download('docx')">
+          <span>Télécharger DOCX</span>
+        </button>
       </div>
     </mat-card>
   } @else {
     <mat-card class="section-card">
       @if (history.length === 0) {
-        <p>Aucune analyse enregistrée.</p>
+        <p class="empty">Aucune analyse enregistrée.</p>
       } @else {
-        @for (item of history; track item.id) {
-          <div class="history-item">
-            <div>
-              <strong>{{ item.score }}%</strong>
-              <span>{{ item.compatibility_level }}</span>
+        <div class="history-list">
+          @for (item of history; track item.id) {
+            <div class="history-item">
+              <div>
+                <strong>Score : {{ item.score }}%</strong>
+                <span>{{ item.compatibility_level }}</span>
+              </div>
+              <a mat-button [routerLink]="['/history', item.id]">Ouvrir</a>
             </div>
-            <a mat-button [routerLink]="['/history', item.id]">Ouvrir</a>
-          </div>
-        }
+          }
+        </div>
       }
     </mat-card>
   }

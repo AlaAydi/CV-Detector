@@ -1,22 +1,232 @@
-@import '../dashboard/dashboard.component.scss';
+:host {
+  --auth-accent: #7c6ff0;
+  --auth-accent-warm: #f2b84b;
+  --auth-bg-deep: #0a0e27;
+  --auth-text: #e8e9f3;
+  --auth-text-muted: #9599b8;
 
-pre {
-  white-space: pre-wrap;
-  background: #f8fafc;
-  padding: 16px;
-  border-radius: 8px;
-  margin-top: 16px;
+  display: block;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 40px 24px 80px;
+  background: linear-gradient(160deg, #0a0e27 0%, #12102e 50%, #171335 100%);
+}
+
+.page-header {
+  max-width: 1080px;
+  margin: 0 auto 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  h1 {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--auth-text);
+    margin: 0;
+  }
+}
+
+.stats-grid {
+  max-width: 1080px;
+  margin: 0 auto 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.stat-card,
+.section-card {
+  background: rgba(17, 18, 42, 0.65) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px !important;
+  box-shadow: 0 20px 50px rgba(5, 6, 20, 0.4) !important;
+  padding: 24px;
+  color: var(--auth-text);
+}
+
+.stat-card {
+  h3 {
+    font: 500 13px/1 'Inter', sans-serif;
+    color: var(--auth-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 12px;
+  }
+
+  .stat-value {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 34px;
+    font-weight: 600;
+    margin: 0;
+    background: linear-gradient(135deg, var(--auth-text), var(--auth-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+.section-card {
+  max-width: 1080px;
+  margin: 0 auto 24px;
+
+  h2 {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 20px;
+    color: var(--auth-text);
+  }
+
+  p {
+    color: var(--auth-text-muted);
+    font-size: 14px;
+  }
+}
+
+// Badge de compatibilité, coloré selon le niveau
+.badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+
+  &.badge-high {
+    background: rgba(52, 199, 89, 0.15);
+    color: #34c759;
+    border: 1px solid rgba(52, 199, 89, 0.3);
+  }
+
+  &.badge-medium {
+    background: rgba(242, 184, 75, 0.15);
+    color: var(--auth-accent-warm);
+    border: 1px solid rgba(242, 184, 75, 0.3);
+  }
+
+  &.badge-low {
+    background: rgba(255, 90, 95, 0.15);
+    color: #ff5a5f;
+    border: 1px solid rgba(255, 90, 95, 0.3);
+  }
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 12px 0;
+
+  ::ng-deep mat-chip {
+    background: rgba(124, 111, 240, 0.15) !important;
+    color: var(--auth-text) !important;
+    border: 1px solid rgba(124, 111, 240, 0.35);
+  }
+}
+
+
+.optimized-text {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-height: 480px;
+  overflow-y: auto;
+
+  p {
+    color: var(--auth-text);
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0 0 14px;
+    padding-left: 18px;
+    position: relative;
+
+    &::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--auth-accent);
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 }
 
 .actions {
   display: flex;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 20px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  strong {
+    color: var(--auth-text);
+    font-size: 14px;
+  }
+
+  span {
+    color: var(--auth-text-muted);
+    font-size: 13px;
+  }
+}
+
+.empty {
+  color: var(--auth-text-muted);
+  font-size: 14px;
+}
+
+// Boutons recolorés dans le thème
+:host ::ng-deep {
+  a[mat-flat-button] {
+    background: linear-gradient(135deg, var(--auth-accent), #5b4fd1) !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(124, 111, 240, 0.35);
+  }
+
+  a[mat-button] {
+    color: var(--auth-accent) !important;
+  }
+
+  button[mat-stroked-button] {
+    color: var(--auth-text) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+
+    &:hover {
+      border-color: var(--auth-accent) !important;
+      color: var(--auth-accent) !important;
+    }
+  }
 }
