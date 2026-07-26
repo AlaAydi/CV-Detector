@@ -185,6 +185,17 @@ input[type='file'] {
   gap: 16px;
 }
 
+.export-note {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(124, 111, 240, 0.12);
+  border: 1px solid rgba(124, 111, 240, 0.25);
+  color: var(--auth-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 pre {
   white-space: pre-wrap;
   background: rgba(0, 0, 0, 0.25);

@@ -12,8 +12,9 @@ from app.database import get_db
 from app.models import Analysis, JobDescription, Resume, User
 from app.schemas import AnalysisRequest, AnalysisResult, AnalysisSummary, DashboardStats, ResumeOut
 from app.services.ats_engine import build_recommendations, compatibility_level, compute_ats_score
-from app.services.file_parser import clean_text, extract_text
+from app.services.file_parser import clean_text, extract_text, flatten_text
 from app.services.generator_service import generate_docx, generate_pdf
+from app.services.template_modifier_service import modify_resume_preserving_template
 from app.services.optimizer_service import optimize_resume
 
 router = APIRouter(prefix="/api", tags=["core"])
@@ -82,7 +83,7 @@ def analyze_match(
     db.add(job)
     db.flush()
 
-    scores = compute_ats_score(resume.texte_extrait, job.description)
+    scores = compute_ats_score(flatten_text(resume.texte_extrait), job.description)
     recommendations = build_recommendations(
         scores["matched_skills"], scores["missing_skills"], scores
     )
@@ -222,13 +223,25 @@ def download_optimized(
     export_dir = Path(settings.upload_dir) / "exports"
     export_dir.mkdir(parents=True, exist_ok=True)
     output = export_dir / f"optimized_{analysis_id}.{fmt}"
-    text = analysis.optimized_text or analysis.resume.texte_extrait
+
+    original_path = Path(analysis.resume.filepath)
+    original_suffix = original_path.suffix.lower()
+    resume_text = analysis.resume.texte_extrait
+    job_text = analysis.job.description
+    fallback_text = analysis.optimized_text or resume_text
+
+    if fmt == original_suffix.lstrip("."):
+        modify_resume_preserving_template(original_path, output, resume_text, job_text)
+    elif fmt == "pdf":
+        generate_pdf(fallback_text, output)
+    else:
+        generate_docx(fallback_text, output)
 
     if fmt == "pdf":
-        generate_pdf(text, output)
         media_type = "application/pdf"
     else:
-        generate_docx(text, output)
         media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-    return FileResponse(path=output, filename=output.name, media_type=media_type)
+    original_name = Path(analysis.resume.filename).stem
+    download_name = f"{original_name}_optimise.{fmt}"
+    return FileResponse(path=output, filename=download_name, media_type=media_type)

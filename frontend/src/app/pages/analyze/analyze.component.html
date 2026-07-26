@@ -94,20 +94,34 @@
 
       <mat-card class="section-card full-width comparison">
         <h3>Comparaison CV</h3>
+        <p class="export-note">
+          Le téléchargement conserve le template de votre CV original. Seule la section compétences
+          est réorganisée : compétences prioritaires pour l'offre en premier, compétences déjà
+          présentes ailleurs dans le CV remontées en gras — sans inventer d'informations.
+        </p>
         <div class="comparison-grid">
           <div>
-            <h4>Ancien CV</h4>
+            <h4>Ancien CV (texte extrait)</h4>
             <pre>{{ result.resume_text }}</pre>
           </div>
           <div>
-            <h4>CV optimisé</h4>
+            <h4>CV optimisé (texte extrait)</h4>
             <pre>{{ result.optimized_text }}</pre>
           </div>
         </div>
         <div class="actions">
-          <button mat-stroked-button (click)="download('pdf')">Télécharger PDF</button>
-          <button mat-stroked-button (click)="download('docx')">Télécharger DOCX</button>
-          <button mat-flat-button color="primary" (click)="reset()">Nouvelle analyse</button>
+          @if (originalFormat() === 'pdf') {
+            <button mat-flat-button color="primary" (click)="download('pdf')">
+              Télécharger CV optimisé (PDF)
+            </button>
+            <button mat-stroked-button (click)="download('docx')">Exporter en DOCX (texte)</button>
+          } @else {
+            <button mat-flat-button color="primary" (click)="download('docx')">
+              Télécharger CV optimisé (DOCX)
+            </button>
+            <button mat-stroked-button (click)="download('pdf')">Exporter en PDF (texte)</button>
+          }
+          <button mat-stroked-button (click)="reset()">Nouvelle analyse</button>
         </div>
       </mat-card>
     </div>

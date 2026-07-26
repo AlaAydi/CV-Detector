@@ -98,6 +98,11 @@ export class AnalyzeComponent {
     window.open(this.api.downloadOptimized(this.result.id, format), '_blank');
   }
 
+  originalFormat(): 'pdf' | 'docx' {
+    const name = this.resume?.filename?.toLowerCase() ?? '';
+    return name.endsWith('.docx') ? 'docx' : 'pdf';
+  }
+
   scoreColor(score: number): string {
     if (score >= 80) return 'excellent';
     if (score >= 65) return 'good';
