@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../core/services/auth.service';
-import { AuthBackgroundComponentComponent } from '../auth-background-component/auth-background-component.component';
+import { AuthBackgroundComponentComponent } from '../../shared/auth-background-component/auth-background-component.component';
 
 @Component({
   selector: 'app-register',

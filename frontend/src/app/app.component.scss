@@ -14,11 +14,15 @@
   flex: 1;
 }
 
-main {
-  min-height: calc(100vh - 64px);
-  background: #f1f5f9;
-}
+
 
 .active {
   background: rgba(255, 255, 255, 0.12);
+}
+:host {
+  display: block;
+}
+
+main {
+  display: block;
 }
