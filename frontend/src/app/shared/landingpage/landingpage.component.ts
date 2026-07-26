@@ -24,6 +24,7 @@ export class LandingpageComponent {
  private readonly reducedMotion =
     typeof window !== 'undefined' &&
     !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  currentYear = new Date().getFullYear();
 
   private rotateX = signal(0);
   private rotateY = signal(0);
