@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-
+from app.services.optimizer_service import optimize_sections
 from app.config import settings
 from app.core.deps import get_current_user, get_optional_user
 from app.database import get_db
@@ -230,18 +230,51 @@ def download_optimized(
     job_text = analysis.job.description
     fallback_text = analysis.optimized_text or resume_text
 
-    if fmt == original_suffix.lstrip("."):
-        modify_resume_preserving_template(original_path, output, resume_text, job_text)
-    elif fmt == "pdf":
-        generate_pdf(fallback_text, output)
+  
+    if fmt == "pdf":
+        sections = optimize_sections(
+            resume_text,
+            job_text
+        )
+
+        generate_pdf(
+            sections,
+            output
+        )
+
+
+    elif fmt == original_suffix.lstrip("."):
+        # DOCX -> DOCX : conserver le template original
+        modify_resume_preserving_template(
+            original_path,
+            output,
+            resume_text,
+            job_text
+        )
+
+
     else:
-        generate_docx(fallback_text, output)
+        # Génération DOCX simple
+        generate_docx(
+            fallback_text,
+            output
+        )
+
 
     if fmt == "pdf":
         media_type = "application/pdf"
     else:
-        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        media_type = (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+
 
     original_name = Path(analysis.resume.filename).stem
     download_name = f"{original_name}_optimise.{fmt}"
-    return FileResponse(path=output, filename=download_name, media_type=media_type)
+
+
+    return FileResponse(
+        path=output,
+        filename=download_name,
+        media_type=media_type
+    )

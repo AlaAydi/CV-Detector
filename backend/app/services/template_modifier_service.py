@@ -255,75 +255,158 @@ def _write_line_on_pdf(
     highlight_tokens: frozenset[str],
     style: dict,
 ) -> None:
-    padding = fitz.Rect(rect.x0 - 1, rect.y0 - 1, rect.x1 + 1, rect.y1 + 1)
-    page.add_redact_annot(padding, fill=(1, 1, 1))
+
+    # Effacer uniquement l'ancien contenu
+    area = fitz.Rect(
+        rect.x0 - 1,
+        rect.y0 - 1,
+        rect.x1 + 1,
+        rect.y1 + 2
+    )
+
+    page.add_redact_annot(area, fill=(1, 1, 1))
     page.apply_redactions()
 
-    fontsize = style["size"]
-    y = rect.y0 + fontsize * 0.85
-    x = rect.x0
-    color = _color_from_int(style["color"])
+
+    fontsize = style.get("size", 10)
+    color = _color_from_int(style.get("color", 0))
+
+
+    # largeur maximale de la zone originale
+    max_width = rect.width
+
+
+    skills = []
 
     if "," in line or ";" in line:
-        separator = ", " if "," in line else "; "
-        parts = [part.strip() for part in re.split(r"[,;]", line) if part.strip()]
-        for index, part in enumerate(parts):
-            bold = _token_is_highlighted(part, highlight_tokens) or (
-                style["bold"] and not highlight_tokens
-            )
-            fontname = _pdf_fontname(style, bold)
-            page.insert_text((x, y), part, fontname=fontname, fontsize=fontsize, color=color)
-            x += fitz.get_text_length(part, fontname=fontname, fontsize=fontsize)
-            if index < len(parts) - 1:
-                page.insert_text((x, y), separator, fontname=_pdf_fontname(style, False), fontsize=fontsize, color=color)
-                x += fitz.get_text_length(separator, fontname=_pdf_fontname(style, False), fontsize=fontsize)
+        skills = [
+            x.strip()
+            for x in re.split(r"[,;]", line)
+            if x.strip()
+        ]
     else:
-        bold = _token_is_highlighted(line, highlight_tokens) or style["bold"]
-        fontname = _pdf_fontname(style, bold)
-        page.insert_text((x, y), line, fontname=fontname, fontsize=fontsize, color=color)
+        skills = [line]
 
 
-def _apply_section_to_pdf_page(page: fitz.Page, section: ResumeSection) -> bool:
+    x = rect.x0
+    y = rect.y1 - 2
+
+
+    for index, skill in enumerate(skills):
+
+        separator = ", " if index < len(skills)-1 else ""
+
+        text = skill + separator
+
+
+        bold = _token_is_highlighted(
+            skill,
+            highlight_tokens
+        )
+
+
+        font = _pdf_fontname(
+            style,
+            bold
+        )
+
+
+        width = fitz.get_text_length(
+            text,
+            fontname=font,
+            fontsize=fontsize
+        )
+
+
+        # si dépassement de la ligne originale
+        if x + width > rect.x0 + max_width:
+
+            # On arrête pour ne pas casser le template
+            break
+
+
+        page.insert_text(
+            (x, y),
+            text,
+            fontname=font,
+            fontsize=fontsize,
+            color=color
+        )
+
+
+        x += width
+
+def _apply_section_to_pdf_page(
+    page: fitz.Page,
+    section: ResumeSection
+) -> bool:
+
     if not section.title or not section.lines:
         return False
 
-    header_rect = _find_title_rect(page, section.title)
+
+    header_rect = _find_title_rect(
+        page,
+        section.title
+    )
+
+
     if not header_rect:
         return False
 
-    y_start = header_rect.y1 + 2
-    y_end = _find_section_end_y(page, y_start)
-    if y_end <= y_start:
-        return False
 
-    body_entries = _get_body_line_entries(page, y_start, y_end)
+    y_start = header_rect.y1 + 2
+
+    y_end = _find_section_end_y(
+        page,
+        y_start
+    )
+
+
+    body_entries = _get_body_line_entries(
+        page,
+        y_start,
+        y_end
+    )
+
+
     if not body_entries:
         return False
 
+
     modified = False
-    for index, optimized_line in enumerate(section.lines):
-        if index >= len(body_entries):
-            break
-        rect, original_text, spans = body_entries[index]
-        if optimized_line.strip() == original_text.strip():
+
+
+    # On garde uniquement l'espace existant
+    available = len(body_entries)
+
+
+    new_lines = section.lines[:available]
+
+
+    for index, optimized_line in enumerate(new_lines):
+
+        rect, original, spans = body_entries[index]
+
+
+        if optimized_line.strip() == original.strip():
             continue
+
+
         style = _span_style(spans)
-        _write_line_on_pdf(page, rect, optimized_line, section.highlight_tokens, style)
+
+
+        _write_line_on_pdf(
+            page,
+            rect,
+            optimized_line,
+            section.highlight_tokens,
+            style
+        )
+
+
         modified = True
 
-    if len(section.lines) > len(body_entries):
-        last_rect, _, last_spans = body_entries[-1]
-        style = _span_style(last_spans)
-        fontsize = style["size"]
-        y = last_rect.y1 + fontsize * 0.4
-        x = last_rect.x0
-        color = _color_from_int(style["color"])
-        for extra_line in section.lines[len(body_entries) :]:
-            bold = _token_is_highlighted(extra_line, section.highlight_tokens)
-            fontname = _pdf_fontname(style, bold)
-            page.insert_text((x, y), extra_line, fontname=fontname, fontsize=fontsize, color=color)
-            y += fontsize * 1.4
-            modified = True
 
     return modified
 
@@ -354,18 +437,67 @@ def modify_resume_preserving_template(
     resume_text: str,
     job_text: str,
 ) -> bool:
-    sections = optimize_sections(resume_text, job_text)
-    has_changes = sections_have_changes(sections)
 
-    suffix = original_path.suffix.lower()
-    if suffix == ".docx":
-        modified = _apply_sections_to_docx(original_path, output_path, sections)
-    elif suffix == ".pdf":
-        modified = _apply_sections_to_pdf(original_path, output_path, sections)
-    else:
-        shutil.copy2(original_path, output_path)
+
+    sections = optimize_sections(
+        resume_text,
+        job_text
+    )
+
+
+    # uniquement compétences
+    sections = [
+        s for s in sections
+        if s.key == "skills"
+    ]
+
+
+    if not sections:
+        shutil.copy2(
+            original_path,
+            output_path
+        )
         return False
 
+
+    has_changes = sections_have_changes(
+        sections
+    )
+
+
+    if original_path.suffix.lower() == ".pdf":
+
+        modified = _apply_sections_to_pdf(
+            original_path,
+            output_path,
+            sections
+        )
+
+    elif original_path.suffix.lower() == ".docx":
+
+        modified = _apply_sections_to_docx(
+            original_path,
+            output_path,
+            sections
+        )
+
+    else:
+
+        shutil.copy2(
+            original_path,
+            output_path
+        )
+
+        return False
+
+
+
     if not modified:
-        shutil.copy2(original_path, output_path)
+
+        shutil.copy2(
+            original_path,
+            output_path
+        )
+
+
     return modified and has_changes
