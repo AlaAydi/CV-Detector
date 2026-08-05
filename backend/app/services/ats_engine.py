@@ -63,36 +63,33 @@ def compatibility_level(score: int) -> str:
 def build_recommendations(matched: list[str], missing: list[str], scores: dict) -> list[str]:
     recommendations: list[str] = []
 
+    current_score = scores.get("score", 0)
+    recommendations.append(
+        f"🎯 Plan d'action ATS > 95% (Score actuel : {current_score}%) : Suivez ces étapes clés pour maximiser la compatibilité de votre CV."
+    )
+
     if missing:
         top_missing = missing[:8]
         recommendations.append(
-            "Ajoutez ou mettez en avant ces compétences déjà présentes dans votre parcours : "
-            + ", ".join(top_missing)
-            + "."
+            f"💡 Compétences prioritaires à ajouter : Intégrez ou mettez en valeur ces compétences requises dans votre section Compétences ainsi que dans le descriptif de vos projets ou expériences : {', '.join(top_missing)}."
         )
 
-    if scores["score_keywords"] < 60:
+    if scores.get("score_keywords", 0) < 95:
         recommendations.append(
-            "Reformulez votre résumé et vos expériences avec les mots-clés exacts de l'offre, "
-            "sans inventer de nouvelles informations."
+            "🔑 Alignement des mots-clés : Harmonisez l'intitulé de votre profil (ex: Développeur Full-Stack Angular / Spring Boot) et le vocabulaire technique avec la description exacte de l'offre."
         )
 
-    if scores["score_experience"] < 50:
-        recommendations.append(
-            "Détaillez vos années d'expérience et vos responsabilités en lien avec le poste visé."
-        )
-
-    if scores["score_education"] < 50:
-        recommendations.append(
-            "Mettez en avant vos diplômes, certifications ou formations pertinentes pour ce poste."
-        )
+    recommendations.append(
+        "📈 Chiffrage des résultats & verbes d'action : Ajoutez des métriques quantifiables dans vos expériences (ex: 'Optimisation des temps de réponse de 35%', 'Équipe de 4 développeurs', 'Gestion de 10k+ utilisateurs') et commencez vos puces par des verbes d'action forts (Conception, Développement, Optimisation)."
+    )
 
     if matched:
         recommendations.append(
-            "Compétences déjà alignées avec l'offre : " + ", ".join(matched[:10]) + "."
+            f"✅ Compétences déjà alignées avec l'offre : {', '.join(matched[:10])}."
         )
 
-    if not recommendations:
-        recommendations.append("Votre CV est déjà bien aligné avec cette offre.")
+    recommendations.append(
+        "📄 Structure & lisibilité ATS : Utilisez des intitulés de rubrique standardisés (RÉSUMÉ, EXPÉRIENCE, ÉDUCATION, COMPÉTENCES, PROJETS, LANGUES) et téléchargez le CV optimisé ci-dessous pour conserver un layout 2 colonnes clair sans texte masqué."
+    )
 
     return recommendations

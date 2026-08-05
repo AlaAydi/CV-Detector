@@ -79,61 +79,19 @@ def _pdf_styles() -> dict:
     }
 
 
-def build_pdf_from_sections(sections: list[ResumeSection], output_path: Path) -> Path:
-    styles = _pdf_styles()
-    doc = SimpleDocTemplate(
-        str(output_path),
-        pagesize=A4,
-        leftMargin=20 * mm,
-        rightMargin=20 * mm,
-        topMargin=16 * mm,
-        bottomMargin=16 * mm,
-    )
-
-    story = []
-    for section in sections:
-        if section.key == "header":
-            if section.lines:
-                story.append(Paragraph(escape(section.lines[0]), styles["name"]))
-                if len(section.lines) > 1:
-                    contact = " &nbsp;|&nbsp; ".join(escape(l) for l in section.lines[1:])
-                    story.append(Paragraph(contact, styles["contact"]))
-                story.append(HRFlowable(width="100%", thickness=0.75, color=colors.HexColor("#cccccc"), spaceAfter=6))
-            continue
-
-        if not section.lines:
-            continue
-
-        story.append(Paragraph(escape(_display_title(section)).upper(), styles["section_title"]))
-        story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#dddddd"), spaceAfter=4))
-
-        for line in section.lines:
-            markup = _highlight_markup(line, section.highlight_tokens)
-            if _is_bulleted(line):
-                story.append(Paragraph(markup, styles["bullet"]))
-            else:
-                prefix = "• " if section.key in {"experience", "projects"} else ""
-                story.append(Paragraph(f"{prefix}{markup}", styles["bullet"] if prefix else styles["body"]))
-
-    doc.build(story)
-    return output_path
-
+from app.services.resume_pdf_builder import build_resume_pdf
 
 def generate_optimized_pdf(resume_text: str, job_text: str, output_path: Path) -> Path:
     sections = optimize_sections(resume_text, job_text)
-    return build_pdf_from_sections(sections, output_path)
+    return build_resume_pdf(sections, output_path)
 
 
 def generate_pdf(sections, output_path: Path) -> Path:
     """
-    Génère un PDF depuis les sections optimisées.
+    Génère un PDF 2 colonnes élégant depuis les sections optimisées.
     Accepte directement List[ResumeSection].
     """
-
-    return build_pdf_from_sections(
-        sections,
-        output_path
-    )
+    return build_resume_pdf(sections, output_path)
 
 
 # ---------------------------------------------------------------------------

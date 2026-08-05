@@ -5,22 +5,26 @@ from app.services.nlp_service import detect_education_terms, detect_languages, d
 
 
 SECTION_HEADERS = {
-    "summary": ["summary", "profil", "profile", "à propos", "about", "resume"],
+    "summary": ["summary", "profil", "profile", "à propos", "about", "resume", "résumé"],
     "skills": ["skills", "compétences", "competences", "technical skills", "technologies"],
-    "experience": ["experience", "expérience", "work experience", "employment", "professional experience"],
-    "education": ["education", "formation", "studies", "diplômes", "diplomes"],
-    "projects": ["projects", "projets", "portfolio"],
+    "experience": ["experience", "expérience", "work experience", "employment", "professional experience", "expériences"],
+    "education": ["education", "éducation", "studies", "diplômes", "diplomes"],
+    "courses": ["formation / cours", "formations / cours", "formation", "formations", "certifications", "courses"],
+    "projects": ["projects", "projets", "portfolio", "projets académiques"],
     "languages": ["languages", "langues", "language"],
 }
 
-# Which detector extracts "keywords" for each section, and how additions are
-# inserted once a keyword is confirmed to be already true (present elsewhere
-# in the CV) and required by the job, but missing from that section.
-#   - "list": list/enumeration-style sections (skills, languages, education) ->
-#     the missing item is inserted as its own line/entry.
-#   - "append_line": narrative/bullet sections (experience, projects) -> the
-#     missing keyword is appended to the end of the last existing bullet,
-#     i.e. a real rewrite of that line, instead of inventing a new bullet.
+DEFAULT_SECTION_TITLES = {
+    "summary": "Résumé",
+    "skills": "Compétences",
+    "experience": "Expérience",
+    "education": "Éducation",
+    "courses": "Formation / Cours",
+    "projects": "Projets",
+    "languages": "Langues",
+}
+
+
 SECTION_KEYWORD_CONFIG: dict[str, tuple] = {
     "skills": (detect_skills, "list"),
     "languages": (detect_languages, "list"),
@@ -39,10 +43,15 @@ class ResumeSection:
 
 
 def _match_section_key(line: str) -> str | None:
-    lower = line.lower()
+    lower = line.lower().strip()
+    if len(lower) > 50:
+        return None
+    if "formation" in lower and "cours" in lower:
+        return "courses"
     for section, keywords in SECTION_HEADERS.items():
-        if any(re.fullmatch(rf"{kw}.*", lower) or lower == kw for kw in keywords):
-            return section
+        for kw in keywords:
+            if re.search(rf"^\b{re.escape(kw)}\b", lower):
+                return section
     return None
 
 
