@@ -173,6 +173,23 @@ input[type='file'] {
   }
 }
 
+.recommendations-list {
+  padding-left: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding: 10px 14px 10px 16px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--auth-accent);
+    border-radius: 0 8px 8px 0;
+    color: var(--auth-text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

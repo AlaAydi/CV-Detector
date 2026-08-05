@@ -84,8 +84,8 @@
       </mat-card>
 
       <mat-card class="section-card full-width">
-        <h3>Recommandations</h3>
-        <ul>
+        <h3>Recommandations & Astuces pour un score > 95%</h3>
+        <ul class="recommendations-list">
           @for (rec of result.recommendations; track rec) {
             <li>{{ rec }}</li>
           }
@@ -95,9 +95,9 @@
       <mat-card class="section-card full-width comparison">
         <h3>Comparaison CV</h3>
         <p class="export-note">
-          Le téléchargement conserve le template de votre CV original. Seule la section compétences
-          est réorganisée : compétences prioritaires pour l'offre en premier, compétences déjà
-          présentes ailleurs dans le CV remontées en gras — sans inventer d'informations.
+          Le téléchargement conserve une présentation professionnelle optimale : design 2 colonnes élégant,
+          compétences réorganisées et prioritaires mises en valeur en gras, rubriques structurées —
+          le tout optimisé ATS sans inventer d'informations.
         </p>
         <div class="comparison-grid">
           <div>
