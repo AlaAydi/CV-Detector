@@ -1,129 +1,441 @@
-<div class="page">
-  <header class="page-header">
-    <div>
-      <h1>Analyser mon CV</h1>
-      <p>Importez votre CV, collez la description du poste, obtenez un score ATS et un CV optimisé.</p>
-    </div>
-  </header>
+<div class="page-container">
+  <!-- Ambient background glow elements -->
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+  <div class="ambient-orb orb-3"></div>
 
-  @if (loading) {
-    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-  }
+  <div class="content-wrapper">
+    <!-- Hero Header -->
+    <header class="hero-header">
+      <div class="badge-pill">
+        <span class="pulse-dot"></span>
+        IA Resume Optimizer & ATS Detector
+      </div>
+      <h1>Analyser & Optimiser votre CV</h1>
+      <p>Importez votre CV, spécifiez l'offre d'emploi et découvrez votre score ATS avec des conseils ciblés pour dépasser 95% de compatibilité.</p>
 
-  @if (error) {
-    <mat-card class="error-card">{{ error }}</mat-card>
-  }
+      <!-- Stepper Indicator -->
+      <div class="stepper-bar">
+        <div class="step-item" [class.active]="step === 'upload'" [class.completed]="step !== 'upload'">
+          <div class="step-circle">
+            @if (step !== 'upload') {
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            } @else {
+              1
+            }
+          </div>
+          <span class="step-label">1. Importer le CV</span>
+        </div>
 
-  @if (step === 'upload') {
-    <mat-card class="section-card">
-      <h2>1. Importer le CV</h2>
-      <p>Formats acceptés : PDF, DOCX (max 5 Mo)</p>
-      <input type="file" accept=".pdf,.docx" (change)="onFileSelected($event)" />
-      @if (selectedFile) {
-        <p class="file-name">Fichier : {{ selectedFile.name }}</p>
-      }
-      <button mat-flat-button color="primary" (click)="uploadCv()" [disabled]="!selectedFile || loading">
-        Importer le CV
-      </button>
-    </mat-card>
-  }
+        <div class="step-connector" [class.active]="step === 'analyze' || step === 'result'"></div>
 
-  @if (step === 'analyze' && resume) {
-    <mat-card class="section-card">
-      <h2>2. Description du poste</h2>
-      <p class="preview-label">CV importé : {{ resume.filename }}</p>
-      <form [formGroup]="form" (ngSubmit)="runAnalysis()">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Coller la description du poste</mat-label>
-          <textarea matInput rows="12" formControlName="jobDescription"></textarea>
-        </mat-form-field>
-        <div class="actions">
-          <button mat-stroked-button type="button" (click)="reset()">Recommencer</button>
-          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading">
-            Lancer l'analyse
+        <div class="step-item" [class.active]="step === 'analyze'" [class.completed]="step === 'result'">
+          <div class="step-circle">
+            @if (step === 'result') {
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            } @else {
+              2
+            }
+          </div>
+          <span class="step-label">2. Offre d'emploi</span>
+        </div>
+
+        <div class="step-connector" [class.active]="step === 'result'"></div>
+
+        <div class="step-item" [class.active]="step === 'result'">
+          <div class="step-circle">3</div>
+          <span class="step-label">3. Diagnostic ATS</span>
+        </div>
+      </div>
+    </header>
+
+    @if (loading) {
+      <div class="loading-overlay">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <div class="loading-status">
+          <div class="spinner-ring"></div>
+          <p>Analyse de la compatibilité du CV en cours par l'IA...</p>
+        </div>
+      </div>
+    }
+
+    @if (error) {
+      <div class="glass-card error-card fade-in">
+        <div class="error-icon">⚠️</div>
+        <div class="error-content">
+          <h4>Erreur d'analyse</h4>
+          <p>{{ error }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 1: UPLOAD CV -->
+    @if (step === 'upload') {
+      <div class="glass-card main-card fade-in">
+        <div class="card-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+          <div>
+            <h2>1. Télécharger votre CV</h2>
+            <p>Sélectionnez votre CV original au format PDF ou DOCX</p>
+          </div>
+        </div>
+
+        <div 
+          class="dropzone-area"
+          [class.drag-over]="isDragging"
+          [class.has-file]="selectedFile"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+          (click)="fileInput.click()"
+        >
+          <input #fileInput type="file" accept=".pdf,.docx" (change)="onFileSelected($event)" hidden />
+
+          @if (!selectedFile) {
+            <div class="dropzone-content">
+              <div class="upload-cloud-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M16 16l-4-4-4 4M12 12v9"></path>
+                  <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"></path>
+                  <polyline points="16 16 12 12 8 16"></polyline>
+                </svg>
+              </div>
+              <h3>Glissez-déposez votre CV ici</h3>
+              <p>ou <span class="highlight-link">parcourez vos fichiers</span> depuis votre appareil</p>
+              <div class="format-badges">
+                <span class="format-pill">PDF</span>
+                <span class="format-pill">DOCX</span>
+                <span class="size-limit">Max 5 Mo</span>
+              </div>
+            </div>
+          } @else {
+            <div class="file-preview-box">
+              <div class="file-icon-badge">
+                @if (selectedFile.name.endsWith('.pdf')) {
+                  <span class="pdf-tag">PDF</span>
+                } @else {
+                  <span class="docx-tag">DOCX</span>
+                }
+              </div>
+              <div class="file-details">
+                <span class="filename">{{ selectedFile.name }}</span>
+                <span class="filesize">{{ formattedFileSize() }}</span>
+              </div>
+              <button type="button" class="remove-file-btn" (click)="$event.stopPropagation(); reset()">
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="card-footer-actions">
+          <button 
+            mat-flat-button 
+            class="glow-btn primary-glow" 
+            (click)="uploadCv()" 
+            [disabled]="!selectedFile || loading"
+          >
+            <span>Continuer vers l'offre d'emploi</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
           </button>
         </div>
-      </form>
-    </mat-card>
-  }
+      </div>
+    }
 
-  @if (step === 'result' && result) {
-    <div class="results-grid">
-      <mat-card class="score-card" [class]="scoreColor(result.score)">
-        <h2>Score ATS</h2>
-        <div class="score-value">{{ result.score }}%</div>
-        <p>Compatibilité : {{ result.compatibility_level }}</p>
-      </mat-card>
-
-      <mat-card class="section-card">
-        <h3>Détail du score</h3>
-        <ul class="score-breakdown">
-          <li>Compétences : {{ result.score_skills }}%</li>
-          <li>Mots-clés : {{ result.score_keywords }}%</li>
-          <li>Expérience : {{ result.score_experience }}%</li>
-          <li>Formation : {{ result.score_education }}%</li>
-        </ul>
-      </mat-card>
-
-      <mat-card class="section-card">
-        <h3>Compétences détectées</h3>
-        <div class="chips">
-          @for (skill of result.matched_skills; track skill) {
-            <mat-chip>{{ skill }}</mat-chip>
-          }
-        </div>
-      </mat-card>
-
-      <mat-card class="section-card">
-        <h3>Compétences manquantes</h3>
-        <div class="chips missing">
-          @for (skill of result.missing_skills; track skill) {
-            <mat-chip>{{ skill }}</mat-chip>
-          }
-        </div>
-      </mat-card>
-
-      <mat-card class="section-card full-width">
-        <h3>Recommandations & Astuces pour un score > 95%</h3>
-        <ul class="recommendations-list">
-          @for (rec of result.recommendations; track rec) {
-            <li>{{ rec }}</li>
-          }
-        </ul>
-      </mat-card>
-
-      <mat-card class="section-card full-width comparison">
-        <h3>Comparaison CV</h3>
-        <p class="export-note">
-          Le téléchargement conserve une présentation professionnelle optimale : design 2 colonnes élégant,
-          compétences réorganisées et prioritaires mises en valeur en gras, rubriques structurées —
-          le tout optimisé ATS sans inventer d'informations.
-        </p>
-        <div class="comparison-grid">
+    <!-- STEP 2: JOB DESCRIPTION -->
+    @if (step === 'analyze' && resume) {
+      <div class="glass-card main-card fade-in">
+        <div class="card-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
           <div>
-            <h4>Ancien CV (texte extrait)</h4>
-            <pre>{{ result.resume_text }}</pre>
-          </div>
-          <div>
-            <h4>CV optimisé (texte extrait)</h4>
-            <pre>{{ result.optimized_text }}</pre>
+            <h2>2. Coller la description de l'offre d'emploi</h2>
+            <div class="cv-loaded-chip">
+              <span class="dot"></span>
+              CV chargé : <strong>{{ resume.filename }}</strong>
+            </div>
           </div>
         </div>
-        <div class="actions">
-          @if (originalFormat() === 'pdf') {
-            <button mat-flat-button color="primary" (click)="download('pdf')">
-              Télécharger CV optimisé (PDF)
+
+        <form [formGroup]="form" (ngSubmit)="runAnalysis()" class="job-form">
+          <div class="textarea-wrapper">
+            <textarea 
+              formControlName="jobDescription"
+              rows="10"
+              placeholder="Collez ici l'intitulé du poste, la liste des compétences requises, les missions et prérequis de l'offre d'emploi..."
+            ></textarea>
+            <div class="char-count">
+              {{ form.value.jobDescription?.length || 0 }} caractères
+            </div>
+          </div>
+
+          <div class="card-footer-actions space-between">
+            <button type="button" class="glass-btn" (click)="reset()">
+              ← Modifier le CV
             </button>
-            <button mat-stroked-button (click)="download('docx')">Exporter en DOCX (texte)</button>
-          } @else {
-            <button mat-flat-button color="primary" (click)="download('docx')">
-              Télécharger CV optimisé (DOCX)
+
+            <button 
+              type="submit" 
+              mat-flat-button 
+              class="glow-btn primary-glow"
+              [disabled]="form.invalid || loading"
+            >
+              <span>🚀 Lancer l'analyse ATS</span>
             </button>
-            <button mat-stroked-button (click)="download('pdf')">Exporter en PDF (texte)</button>
-          }
-          <button mat-stroked-button (click)="reset()">Nouvelle analyse</button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- STEP 3: RESULTS & DIAGNOSTIC -->
+    @if (step === 'result' && result) {
+      <div class="results-dashboard fade-in">
+        
+        <!-- Score Main Banner Card -->
+        <div class="glass-card score-hero-card" [class]="scoreColor(result.score)">
+          <div class="gauge-container">
+            <svg class="radial-gauge" viewBox="0 0 120 120">
+              <circle class="gauge-bg" cx="60" cy="60" r="54" />
+              <circle 
+                class="gauge-progress" 
+                cx="60" 
+                cy="60" 
+                r="54" 
+                [style.strokeDashoffset]="getScoreStrokeDashOffset(result.score)"
+              />
+            </svg>
+            <div class="gauge-value">
+              <span class="number">{{ result.score }}</span>
+              <span class="percent">%</span>
+            </div>
+          </div>
+
+          <div class="score-meta">
+            <span class="score-label">Score d'alignement ATS</span>
+            <h2 class="compatibility-title">
+              Compatibilité {{ result.compatibility_level.toUpperCase() }}
+            </h2>
+            <p class="score-desc">
+              Votre CV présente un alignement de {{ result.score }}% avec la fiche de poste. 
+              Consultez le plan d'action ci-dessous pour viser plus de 95%.
+            </p>
+          </div>
         </div>
-      </mat-card>
-    </div>
-  }
+
+        <!-- Breakdown & Analytics Grid -->
+        <div class="dashboard-grid">
+          <!-- Score Breakdown Card -->
+          <div class="glass-card breakdown-card">
+            <div class="card-title-row">
+              <h3>Détail du score par rubrique</h3>
+            </div>
+
+            <div class="breakdown-list">
+              <div class="bar-item">
+                <div class="bar-info">
+                  <span>Compétences requises</span>
+                  <strong>{{ result.score_skills }}%</strong>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill skills-fill" [style.width.%]="result.score_skills"></div>
+                </div>
+              </div>
+
+              <div class="bar-item">
+                <div class="bar-info">
+                  <span>Mots-clés & Vocabulaire</span>
+                  <strong>{{ result.score_keywords }}%</strong>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill keywords-fill" [style.width.%]="result.score_keywords"></div>
+                </div>
+              </div>
+
+              <div class="bar-item">
+                <div class="bar-info">
+                  <span>Expérience & Responsabilités</span>
+                  <strong>{{ result.score_experience }}%</strong>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill experience-fill" [style.width.%]="result.score_experience"></div>
+                </div>
+              </div>
+
+              <div class="bar-item">
+                <div class="bar-info">
+                  <span>Formation & Certifications</span>
+                  <strong>{{ result.score_education }}%</strong>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill education-fill" [style.width.%]="result.score_education"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Matched & Missing Skills Cards -->
+          <div class="glass-card skills-card">
+            <div class="skills-section">
+              <div class="skills-header">
+                <span class="badge-icon success">✓</span>
+                <h3>Compétences détectées ({{ result.matched_skills.length }})</h3>
+              </div>
+              <div class="chips-flex">
+                @for (skill of result.matched_skills; track skill) {
+                  <span class="skill-chip matched">{{ skill }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="skills-divider"></div>
+
+            <div class="skills-section">
+              <div class="skills-header">
+                <span class="badge-icon warning">+</span>
+                <h3>Compétences prioritaires manquantes ({{ result.missing_skills.length }})</h3>
+              </div>
+              <div class="chips-flex">
+                @for (skill of result.missing_skills; track skill) {
+                  <span class="skill-chip missing">{{ skill }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendations Card -->
+        <div class="glass-card recommendations-card full-width">
+          <div class="card-title-row">
+            <span class="badge-icon glow-target">🎯</span>
+            <h3>Plan d'action & Recommandations pour un score ATS > 95%</h3>
+          </div>
+
+          <div class="recommendations-grid">
+            @for (rec of result.recommendations; track rec) {
+              <div class="rec-item-card">
+                <p>{{ rec }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Comparison & Download Card -->
+        <div class="glass-card comparison-card full-width">
+          <div class="card-title-row space-between">
+            <div>
+              <h3>Aperçu du CV Optimisé conservant le Template 2 Colonnes</h3>
+              <p class="export-note">
+                Le téléchargement génère votre CV optimisé dans un design à 2 colonnes élégant. Les compétences requises sont réorganisées et mises en gras sans invention d'informations.
+              </p>
+            </div>
+
+            <div class="view-tabs">
+              <button 
+                type="button" 
+                [class.active]="activeComparisonTab === 'split'" 
+                (click)="activeComparisonTab = 'split'"
+              >
+                Côte-à-côte
+              </button>
+
+              <button 
+                type="button" 
+                [class.active]="activeComparisonTab === 'optimized'" 
+                (click)="activeComparisonTab = 'optimized'"
+              >
+                CV Optimisé
+              </button>
+
+              <button 
+                type="button" 
+                [class.active]="activeComparisonTab === 'original'" 
+                (click)="activeComparisonTab = 'original'"
+              >
+                Original
+              </button>
+            </div>
+          </div>
+
+          <div class="comparison-boxes" [class]="activeComparisonTab">
+            @if (activeComparisonTab === 'split' || activeComparisonTab === 'original') {
+              <div class="preview-box">
+                <div class="box-title">
+                  <span class="dot-red"></span> Ancien CV (texte extrait)
+                </div>
+                <pre>{{ result.resume_text }}</pre>
+              </div>
+            }
+
+            @if (activeComparisonTab === 'split' || activeComparisonTab === 'optimized') {
+              <div class="preview-box optimized">
+                <div class="box-title">
+                  <span class="dot-green"></span> CV Optimisé (Mots-clés rehaussés)
+                </div>
+                <pre>{{ result.optimized_text }}</pre>
+              </div>
+            }
+          </div>
+
+          <!-- Download Action Bar -->
+          <div class="download-bar">
+            @if (originalFormat() === 'pdf') {
+              <button 
+                mat-flat-button 
+                class="glow-btn primary-glow lg" 
+                (click)="download('pdf')"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Télécharger le CV optimisé (PDF 2 Colonnes)</span>
+              </button>
+
+              <button mat-stroked-button class="glass-btn" (click)="download('docx')">
+                Exporter en DOCX
+              </button>
+            } @else {
+              <button 
+                mat-flat-button 
+                class="glow-btn primary-glow lg" 
+                (click)="download('docx')"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Télécharger le CV optimisé (DOCX)</span>
+              </button>
+
+              <button mat-stroked-button class="glass-btn" (click)="download('pdf')">
+                Exporter en PDF (2 Colonnes)
+              </button>
+            }
+
+            <button mat-stroked-button class="glass-btn reset-btn" (click)="reset()">
+              🔄 Nouvelle analyse
+            </button>
+          </div>
+        </div>
+
+      </div>
+    }
+
+  </div>
 </div>

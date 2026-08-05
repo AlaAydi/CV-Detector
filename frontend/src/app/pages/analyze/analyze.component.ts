@@ -36,6 +36,8 @@ export class AnalyzeComponent {
   error = '';
   loading = false;
   step: 'upload' | 'analyze' | 'result' = 'upload';
+  isDragging = false;
+  activeComparisonTab: 'split' | 'optimized' | 'original' = 'split';
 
   form = this.fb.group({
     jobDescription: ['', [Validators.required, Validators.minLength(20)]],
@@ -43,8 +45,53 @@ export class AnalyzeComponent {
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.selectedFile = input.files?.[0] ?? null;
+    if (input.files?.length) {
+      this.handleFile(input.files[0]);
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    if (event.dataTransfer?.files?.length) {
+      this.handleFile(event.dataTransfer.files[0]);
+    }
+  }
+
+  private handleFile(file: File): void {
+    const name = file.name.toLowerCase();
+    if (!name.endsWith('.pdf') && !name.endsWith('.docx')) {
+      this.error = 'Seuls les fichiers PDF et DOCX sont acceptés.';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.error = 'La taille du fichier ne doit pas dépasser 5 Mo.';
+      return;
+    }
+    this.selectedFile = file;
     this.error = '';
+  }
+
+  formattedFileSize(): string {
+    if (!this.selectedFile) return '';
+    const bytes = this.selectedFile.size;
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
   uploadCv(): void {
@@ -91,6 +138,7 @@ export class AnalyzeComponent {
     this.result = null;
     this.step = 'upload';
     this.form.reset();
+    this.error = '';
   }
 
   download(format: 'pdf' | 'docx'): void {
@@ -108,5 +156,11 @@ export class AnalyzeComponent {
     if (score >= 65) return 'good';
     if (score >= 45) return 'moderate';
     return 'low';
+  }
+
+  getScoreStrokeDashOffset(score: number): number {
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    return circumference - (score / 100) * circumference;
   }
 }
